@@ -8,6 +8,8 @@ class CORSRequestHandler(SimpleHTTPRequestHandler):
         self.send_header("Access-Control-Allow-Methods", "GET, OPTIONS")
         self.send_header("Access-Control-Allow-Headers", "*")
 
+        # in case pbf files are gzip compressed.
+        # Remove this if pbf files are uncompressed.
         if self.path.endswith(".pbf"):
             self.send_header("Content-Type", "application/x-protobuf")
             self.send_header("Content-Encoding", "gzip")

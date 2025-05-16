@@ -97,11 +97,11 @@ To view the result locally `http://localhost:8000/` after running a local web se
 > python3 python3 contrib/server.py
 ~~~
 
-To upload result for static file hosting (e.g., on Github) you would need to [uncompress pbf files](https://github.com/mapbox/mbutil/issues/79#issuecomment-1772585406) to workaround HTTP Content-Type.
+To upload result for static file hosting (e.g., on Github) you may need to uncompress pbf files to workaround HTTP Content-Type. (Note: you have to modify `contrib/server.py` for local testing.)
 
 ~~~
-> find tiles -name '*.pbf' -exec bash -c 'mv "$1" "${1}".gz' - '{}' \;
-
-> find tiles -name '*.gz' -exec bash -c 'gzip -d "$1"' - '{}' \;
+> find tiles -name '*.pbf' -print0 | xargs -0 -I{} sh -c '
+    gzip -d -c "{}" > "{}.tmp" && mv "{}.tmp" "{}"
+  '
 ~~~
 
