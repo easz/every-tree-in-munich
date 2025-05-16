@@ -1,0 +1,81 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Visualization - Map of Trees</title>
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+  <script src="https://unpkg.com/leaflet.vectorgrid@1.3.0/dist/leaflet.vectorgrid.min.js"></script>
+  <style>
+    html,
+    body {
+      height: 100%;
+      margin: 0;
+      padding: 0;
+    }
+
+    #map {
+      width: 100%;
+      height: 100%;
+    }
+  </style>
+</head>
+
+<body>
+  <div id="map"></div>
+  <script>
+    var map = L.map('map').setView([48.1351, 11.5820], 9); // Munich coordinates
+
+    L.tileLayer('http://mt0.google.com/vt/lyrs=y&hl=en&x={x}&y={y}&z={z}', {
+      attribution: '&copy; Map data: Google, Maxar Technologies.',
+      maxZoom: 20
+    }).addTo(map);
+
+    // Credit: https://github.com/Leaflet/Leaflet.VectorGrid/issues/267
+    function patchVectorGridLayer(obj) {
+      obj._createLayer_orig = obj._createLayer;
+      obj._createLayer = function (feat, pxPerExtent, layerStyle) {
+        let layer = this._createLayer_orig(feat, pxPerExtent, layerStyle);
+        if (feat.type === 1) {
+          layer.getLatLng = null;
+        }
+        return layer;
+      };
+      return obj;
+    }
+
+    patchVectorGridLayer(
+      L.vectorGrid.protobuf("tiles/{z}/{x}/{y}.pbf", {
+        attribution: "(CC BY 4.0) <a href='https://www.geodaten.bayern.de/odd/m/3/html/nutzungsbedingungen.html'>Bayerische Vermessungsverwaltung</a>",
+        rendererFactory: L.svg.tile,
+        vectorTileLayerStyles: {
+          trees: function (properties, z) {
+            var r = z < 16 ? 5
+              : z < 17 ? 7
+                : 15;
+            return {
+              radius: r,
+              color: '#00AA11',
+              fill: true,
+              weight: 1,
+              fillOpacity: 0.3
+            };
+          }
+        },
+        maxZoom: 20,
+        interactive: true
+      })
+    ).on('click', function (e) {
+      const h = e.layer.properties.baumhoehe;
+      const latlng = e.latlng;
+      L.popup()
+        .setLatLng(latlng)
+        .setContent('🌱 ' + h + ' m')
+        .openOn(map);
+    }).addTo(map);
+  </script>
+</body>
+
+</html>

@@ -1,0 +1,6 @@
+tmp_geojson/
+*.gpkg
+*.mbtiles
+
+.DS_Store
+
