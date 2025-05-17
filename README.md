@@ -71,7 +71,7 @@ Finally, we merge all mbtiles files with `tile-join` and convert them to `pbf` f
 ~~~
 > tippecanoe -o munich_trees_z17.mbtiles \
              --layer=trees --projection=EPSG:4326 \
-             --minimum-zoom=17 --maximum-zoom=20 \
+             --minimum-zoom=17 --maximum-zoom=19 \
              --base-zoom=17 \
              --no-feature-limit --no-tile-size-limit \
              --buffer=64 --read-parallel \

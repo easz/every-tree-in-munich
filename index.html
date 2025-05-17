@@ -14,11 +14,43 @@
       height: 100%;
       margin: 0;
       padding: 0;
+      font-family: 'Segoe UI', Roboto, sans-serif;
     }
 
     #map {
       width: 100%;
       height: 100%;
+    }
+
+    .leaflet-popup-content-wrapper {
+      border-radius: 4px;
+      box-shadow: 0 0 26px rgba(0, 0, 0, 0.65);
+    }
+
+    .leaflet-popup-content {
+      font-size: 14px;
+      font-weight: 600;
+      color: #222;
+      margin: 15px 20px 5px 10px;
+    }
+
+    .leaflet-popup-close-button span {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      width: 15px;
+      height: 15px;
+      border: 1px solid #aaa;
+      border-radius: 4px;
+      background: #f0f0f0;
+      color: #333;
+      margin: 3px;
+      cursor: pointer;
+    }
+
+    .leaflet-popup-close-button span:hover {
+      background-color: #e0e0e0;
+      border-color: #888;
     }
   </style>
 </head>
@@ -52,19 +84,22 @@
         rendererFactory: L.svg.tile,
         vectorTileLayerStyles: {
           trees: function (properties, z) {
-            var r = z < 16 ? 5
-              : z < 17 ? 7
+            var r = z < 15 ? 5
+              : z < 19 ? 7
                 : 15;
+            var w = z < 18 ? 1 : 2;
             return {
               radius: r,
-              color: '#00AA11',
+              color: '#000000',
+              fillColor: '#00AA11',
               fill: true,
-              weight: 1,
+              weight: w,
               fillOpacity: 0.3
             };
           }
         },
         maxZoom: 20,
+        maxNativeZoom: 19,
         interactive: true
       })
     ).on('click', function (e) {
