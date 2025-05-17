@@ -2,8 +2,8 @@
 <html lang="en">
 
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Visualization - Map of Trees</title>
   <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
   <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
@@ -52,24 +52,124 @@
       background-color: #e0e0e0;
       border-color: #888;
     }
+
+    .leaflet-popup-tip-container {
+      display: none !important;
+    }
+
+    #info-banner {
+      position: absolute;
+      top: 10px;
+      left: 50%;
+      max-width: none;
+      display: inline-block;
+      transform: translateX(-50%);
+      background-color: rgba(255, 247, 225, 0.9);
+      padding: 4px 20px;
+      border-radius: 8px;
+      box-shadow: 0 5px 20px rgba(0, 0, 0, 0.35);
+      font-size: 15px;
+      font-weight: 550;
+      font-family: Georgia, "Times New Roman", Times, serif;
+      cursor: pointer;
+      z-index: 9999999;
+      text-align: center;
+      transition: all 0.3s ease;
+      line-height: 1.3;
+      margin-bottom: 0.8em;
+    }
+
+    #info-banner h1 {
+      font-size: 22px;
+      margin: 0;
+      padding: 0;
+      display: inline;
+      font-weight: 600;
+      white-space: nowrap;
+    }
+
+    #info-banner #banner-more {
+      margin-top: 6px;
+      display: none;
+      text-align: left;
+    }
+
+    #info-banner #banner-dummy {
+      margin-top: 6px;
+      display: block;
+      font-style: italic;
+      text-decoration: underline;
+      color: #007a33;
+      font-size: 18p;
+      font-weight: 500;
+      text-align: center;
+    }
   </style>
+  <base target="_blank" />
 </head>
 
 <body>
-  <div id="map"></div>
-  <script>
-    var map = L.map('map').setView([48.1351, 11.5820], 9); // Munich coordinates
+  <div id="info-banner" onclick="toggleBanner()">
+    <div>
+      <h1>🌳 Find Every Tree in Munich 🌳</h1>
+      <div id="banner-dummy">[more...]</div>
+    </div>
+    <div id="banner-more">
+      <p>Starting in 2025, the Bavarian Surveying Administration (German: Bayerische Vermessungsverwaltung)
+        will make comprehensive tree data for the entire state of Bavaria available as open data.</p>
 
-    L.tileLayer('http://mt0.google.com/vt/lyrs=y&hl=en&x={x}&y={y}&z={z}', {
+      <p>This dataset includes the <b>height</b> and precise geographical <b>location</b> of all trees,
+        identified assumedly using artificial intelligence methods—such as deep learning—applied to aerial imagery and
+        digital
+        terrain models.</p>
+
+      <p>Use this map to explore about one million trees recorded across Munich’s districts in the 2024 dataset.
+        Simply <b>hover</b> your mouse over any tree to see its <b>height</b> in meters.</p>
+
+      <p>The map’s source code and creation details are available on <a
+          href="https://github.com/easz/every-tree-in-munich/tree/main">Github</a>.</p>
+      <div id="banner-dummy">[close]</div>
+    </div>
+  </div>
+
+  <div id="map"></div>
+
+  <script>
+    document.querySelectorAll('#info-banner a').forEach(a => a.addEventListener('click', e => e.stopPropagation()));
+    function toggleBanner() {
+      const more = document.getElementById('banner-more');
+      more.style.display = more.style.display === 'block' ? 'none' : 'block';
+      const dummy = document.getElementById('banner-dummy');
+      dummy.style.display = more.style.display === 'block' ? 'none' : 'block';
+    }
+
+    const map = L.map('map', {
+      center: [48.1371, 11.5754],
+      zoom: 18,
+      maxBounds: [[48, 11.3], [48.3, 11.8]],
+      minZoom: 12,
+      maxZoom: 20,
+    });
+
+    L.tileLayer('https://mt0.google.com/vt/lyrs=y&hl=en&x={x}&y={y}&z={z}', {
       attribution: '&copy; Map data: Google, Maxar Technologies.',
-      maxZoom: 20
+      minZoom: 12,
+      maxZoom: 20,
+      opacity: 0.95,
     }).addTo(map);
 
-    // Credit: https://github.com/Leaflet/Leaflet.VectorGrid/issues/267
+    const defaultFillColor = '#CCFF00';
+    const defaultColor = '#CCFF00';
+    const defaultFillOpacity = 0.4;
+    const defaultWeight = (z) => (z < 18 ? 1 : 3);
+    const defaultRadius = (z) =>
+      z < 15 ? 5 : z < 18 ? 7 : 20;
+
+    // Credit: https://github.com/Leaflet/Leaflet.VectorGrid/issues/267#issuecomment-2060799055
     function patchVectorGridLayer(obj) {
       obj._createLayer_orig = obj._createLayer;
       obj._createLayer = function (feat, pxPerExtent, layerStyle) {
-        let layer = this._createLayer_orig(feat, pxPerExtent, layerStyle);
+        const layer = this._createLayer_orig(feat, pxPerExtent, layerStyle);
         if (feat.type === 1) {
           layer.getLatLng = null;
         }
@@ -78,38 +178,61 @@
       return obj;
     }
 
-    patchVectorGridLayer(
+    const vectorGrid = patchVectorGridLayer(
       L.vectorGrid.protobuf("tiles/{z}/{x}/{y}.pbf", {
-        attribution: "(CC BY 4.0) <a href='https://www.geodaten.bayern.de/odd/m/3/html/nutzungsbedingungen.html'>Bayerische Vermessungsverwaltung</a>",
+        attribution:
+          "(CC BY 4.0) <a href='https://www.geodaten.bayern.de/odd/m/3/html/nutzungsbedingungen.html'>Bayerische Vermessungsverwaltung</a>",
         rendererFactory: L.svg.tile,
         vectorTileLayerStyles: {
-          trees: function (properties, z) {
-            var r = z < 15 ? 5
-              : z < 19 ? 7
-                : 15;
-            var w = z < 18 ? 1 : 2;
-            return {
-              radius: r,
-              color: '#000000',
-              fillColor: '#00AA11',
-              fill: true,
-              weight: w,
-              fillOpacity: 0.3
-            };
-          }
+          trees: (properties, z) => ({
+            radius: defaultRadius(z),
+            color: defaultColor,
+            fillColor: defaultFillColor,
+            fill: true,
+            weight: defaultWeight(z),
+            fillOpacity: defaultFillOpacity,
+          }),
         },
+        minZoom: 12,
         maxZoom: 20,
         maxNativeZoom: 19,
-        interactive: true
+        interactive: true,
       })
-    ).on('click', function (e) {
-      const h = e.layer.properties.baumhoehe;
-      const latlng = e.latlng;
-      L.popup()
-        .setLatLng(latlng)
-        .setContent('🌱 ' + h + ' m')
-        .openOn(map);
-    }).addTo(map);
+    );
+
+    map.options.closePopupOnClick = false;
+    vectorGrid
+      .on('mouseover', function (e) {
+        const height = e.layer.properties.baumhoehe;
+        const latlng = e.latlng;
+        const z = map.getZoom();
+
+        if (e.layer.bringToFront) {
+          e.layer.bringToFront();
+        }
+
+        e.layer.setStyle({
+          color: '#4CAF1D',
+          fillOpacity: 0.15,
+          weight: defaultWeight(z) * 1.4,
+        });
+
+        L.popup({ offset: [20, -20], autoPan: true })
+          .setLatLng(latlng)
+          .setContent('🌱 ' + height + ' m')
+          .openOn(map);
+      })
+      .on('mouseout', function (e) {
+        const z = map.getZoom();
+        e.layer.setStyle({
+          color: defaultColor,
+          fillColor: defaultFillColor,
+          fillOpacity: defaultFillOpacity,
+          weight: defaultWeight(z),
+        });
+        map.closePopup();
+      })
+      .addTo(map);
   </script>
 </body>
 

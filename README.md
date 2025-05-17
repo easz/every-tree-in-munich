@@ -97,11 +97,13 @@ To view the result locally `http://localhost:8000/` after running a local web se
 > python3 python3 contrib/server.py
 ~~~
 
-To upload result for static file hosting (e.g., on Github) you may need to uncompress pbf files to workaround HTTP Content-Type. (Note: you have to modify `contrib/server.py` for local testing.)
+To upload result for static file hosting (e.g., on Github) you may need to uncompress pbf files to workaround HTTP Content-Type. (Note: you can run local server with `-X` to serve uncompressed pbf.)
 
 ~~~
 > find tiles -name '*.pbf' -print0 | xargs -0 -I{} sh -c '
     gzip -d -c "{}" > "{}.tmp" && mv "{}.tmp" "{}"
   '
+
+> python3 python3 contrib/server.py -X
 ~~~
 
