@@ -120,10 +120,9 @@
 
       <p>This dataset includes the <b>height</b> and precise geographical <b>location</b> of all trees,
         identified assumedly using artificial intelligence methods—such as deep learning—applied to aerial imagery and
-        digital
-        terrain models.</p>
+        digital terrain models. (The result is not perfect but already impressive!)</p>
 
-      <p>Use this map to explore about one million trees recorded across Munich’s districts in the 2024 dataset.
+      <p>Use this map to explore about one million trees recorded across Munich’s districts in the <b>2024</b> dataset.
         Simply <b>hover</b> your mouse over any tree to see its <b>height</b> in meters.</p>
 
       <p>The map’s source code and creation details are available on <a
@@ -151,12 +150,19 @@
       maxZoom: 20,
     });
 
-    L.tileLayer('https://mt0.google.com/vt/lyrs=y&hl=en&x={x}&y={y}&z={z}', {
+    // base layer
+    const byMap = L.tileLayer('https://easz.github.io/by_dop20c_Y2024/{z}/{x}/{y}.png', {
+      attribution: 'BY DOP historisch (2024)',
+      minZoom: 12,
+      maxZoom: 20,
+      maxNativeZoom: 18
+    }).addTo(map);
+    // base layer
+    const gglMap = L.tileLayer('https://mt0.google.com/vt/lyrs=y&hl=en&x={x}&y={y}&z={z}', {
       attribution: '&copy; Map data: Google, Maxar Technologies.',
       minZoom: 12,
       maxZoom: 20,
-      opacity: 0.95,
-    }).addTo(map);
+    });
 
     const defaultFillColor = '#CCFF00';
     const defaultColor = '#CCFF00';
@@ -178,6 +184,7 @@
       return obj;
     }
 
+    // overlay vector layer for tree data
     const vectorGrid = patchVectorGridLayer(
       L.vectorGrid.protobuf("tiles/{z}/{x}/{y}.pbf", {
         attribution:
@@ -231,8 +238,15 @@
           weight: defaultWeight(z),
         });
         map.closePopup();
-      })
-      .addTo(map);
+      }).addTo(map);
+
+    L.control.layers({
+      "Historical Digital Orthophotos Bavaria (2024)": byMap,
+      "Google Map (Satellite + Label)": gglMap
+    }, {
+      "Tree Heights (2024)": vectorGrid
+    }).addTo(map);
+
   </script>
 </body>
 
